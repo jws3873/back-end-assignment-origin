@@ -1,5 +1,7 @@
 package com.example.shoppingmall.product.controller;
 
+import com.example.shoppingmall.product.dto.ProductResponse;
+import com.example.shoppingmall.product.dto.ProductSearchRequest;
 import com.example.shoppingmall.product.entity.Product;
 import com.example.shoppingmall.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -16,16 +18,16 @@ public class ProductController {
 
     private final ProductService productService;
 
+    /**
+     * 상품 목록 조회 API
+     * 검색 조건과 페이징 조건을 기반으로 상품을 조회한다.
+     *
+     * @param request 상품 조회용 DTO
+     * @return 조건에 맞는 상품 목록 (페이징 형태)
+     */
     @GetMapping
-    public Page<Product> getProducts(
-            @RequestParam(defaultValue = "") String category,
-            @RequestParam(defaultValue = "") String name,
-            @RequestParam(defaultValue = "0") int minPrice,
-            @RequestParam(defaultValue = "9999999") int maxPrice,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return productService.getProducts(category, name, minPrice, maxPrice, page, size);
+    public Page<ProductResponse> getProducts(ProductSearchRequest request) {
+        return productService.getProducts(request);
     }
 
 }
