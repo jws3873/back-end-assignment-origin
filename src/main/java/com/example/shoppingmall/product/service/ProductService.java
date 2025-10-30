@@ -1,7 +1,7 @@
 package com.example.shoppingmall.product.service;
 
 import com.example.shoppingmall.product.dto.ProductResponse;
-import com.example.shoppingmall.product.dto.ProductSearchRequest;
+import com.example.shoppingmall.product.dto.ProductRequest;
 import com.example.shoppingmall.product.entity.Product;
 import com.example.shoppingmall.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class ProductService {
      * @param request 상품 조회용 DTO
      * @return 상품 목록 페이지
      */
-    public Page<ProductResponse> getProducts(ProductSearchRequest request) {
+    public Page<ProductResponse> getProducts(ProductRequest request) {
 
         Page<Product> products = productRepository.findByCategoryContainingAndNameContainingAndPriceBetween(
                 request.getCategory(),

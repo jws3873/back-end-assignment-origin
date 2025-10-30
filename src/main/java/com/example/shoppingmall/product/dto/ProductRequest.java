@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ProductSearchRequest extends PageRequestDto {
+public class ProductRequest extends PageRequestDto {
     private String category = "";     // 기본값: 전체 검색
     private String name = "";         // 기본값: 전체 검색
     private int minPrice = 0;         // 최소 가격, 기본값 0
