@@ -1,7 +1,7 @@
 package com.example.shoppingmall.product.controller;
 
 import com.example.shoppingmall.product.dto.ProductResponse;
-import com.example.shoppingmall.product.dto.ProductSearchRequest;
+import com.example.shoppingmall.product.dto.ProductRequest;
 import com.example.shoppingmall.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,7 +24,7 @@ public class ProductController {
      * @return 조건에 맞는 상품 목록 (페이징 형태)
      */
     @GetMapping
-    public Page<ProductResponse> getProducts(ProductSearchRequest request) {
+    public Page<ProductResponse> getProducts(ProductRequest request) {
         return productService.getProducts(request);
     }
 
