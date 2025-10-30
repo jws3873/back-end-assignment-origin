@@ -11,6 +11,7 @@ import lombok.Setter;
 @Setter
 public class CartRequest {
 
+    private Long cartId;     // 장바구니 번호
     private Long userId;     // 사용자 번호
     private Long productId;  // 상품 번호
     private int quantity;    // 추가/수정할 수량
