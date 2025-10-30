@@ -1,5 +1,6 @@
 package com.example.shoppingmall.global.exception;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
  * Controller / Service에서 발생한 예외를 잡아 공통 포맷으로 응답
  */
 @RestControllerAdvice
+@Hidden // <- Swagger(OpenAPI) 문서 생성 시 완전히 무시
 public class GlobalExceptionHandler {
 
     /**
