@@ -55,11 +55,11 @@ public class CartController {
      * 장바구니에서 특정 상품을 제거한다.
      *
      * @param userId 사용자 번호
-     * @param productId 삭제할 상품 번호
+     * @param cartId 장바구니 번호
      */
-    @DeleteMapping("{userId}/{productId}")
-    public void removeFromCart(@PathVariable Long userId, @PathVariable Long productId) {
-        cartService.removeFromCart(userId, productId);
+    @DeleteMapping("{userId}/{cartId}")
+    public void removeFromCart(@PathVariable Long userId, @PathVariable Long cartId) {
+        cartService.removeFromCart(userId, cartId);
     }
 
 }

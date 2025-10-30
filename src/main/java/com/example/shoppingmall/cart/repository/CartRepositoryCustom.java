@@ -18,9 +18,9 @@ public interface CartRepositoryCustom {
     /**
      * 특정 사용자와 상품을 기준으로 장바구니 상품 삭제
      *
-     * @param user       사용자
-     * @param productId  삭제할 상품 번호
+     * @param user    사용자 번호
+     * @param cartId  장바구니 번호
      */
-    void deleteByUserAndProductId(User user, Long productId);
+    void deleteByUserAndCartId(User user, Long cartId);
 
 }

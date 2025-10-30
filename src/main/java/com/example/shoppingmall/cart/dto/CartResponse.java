@@ -11,6 +11,7 @@ import lombok.Getter;
 @Builder
 public class CartResponse {
 
+    private Long cartId;
     private Long productId;
     private String productName;
     private int price;

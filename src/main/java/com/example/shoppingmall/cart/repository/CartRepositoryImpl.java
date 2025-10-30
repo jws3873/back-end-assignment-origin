@@ -27,11 +27,13 @@ public class CartRepositoryImpl implements CartRepositoryCustom {
     }
 
     @Override
-    public void deleteByUserAndProductId(User user, Long productId) {
+    public void deleteByUserAndCartId(User user, Long cartId) {
         queryFactory
                 .delete(QCart.cart)
-                .where(QCart.cart.user.eq(user)
-                        .and(QCart.cart.product.id.eq(productId)))
+                .where(
+                        QCart.cart.user.eq(user)
+                                .and(QCart.cart.id.eq(cartId))
+                )
                 .execute();
     }
 }
