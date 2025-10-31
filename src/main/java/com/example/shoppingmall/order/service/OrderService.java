@@ -10,28 +10,21 @@ import com.example.shoppingmall.order.entity.OrderItem;
 import com.example.shoppingmall.order.entity.OrderStatus;
 import com.example.shoppingmall.order.repository.OrderRepository;
 import com.example.shoppingmall.payment.entity.Payment;
-import com.example.shoppingmall.payment.repository.PaymentRepository;
 import com.example.shoppingmall.payment.service.PaymentService;
 import com.example.shoppingmall.product.entity.Product;
-import com.example.shoppingmall.product.repository.ProductRepository;
 import com.example.shoppingmall.user.entity.User;
 import com.example.shoppingmall.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
     private final CartRepository cartRepository;
-    private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final PaymentService paymentService;
