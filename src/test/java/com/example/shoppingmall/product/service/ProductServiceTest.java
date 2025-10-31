@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
@@ -43,19 +42,13 @@ public class ProductServiceTest {
                 .build();
 
         Page<Product> mockPage = new PageImpl<>(List.of(mockProduct));
-        when(productRepository.findByCategoryContainingAndNameContainingAndPriceBetween(
-                any(String.class),
-                any(String.class),
-                any(Integer.class),
-                any(Integer.class),
-                any(PageRequest.class)
+        when(productRepository.searchProducts(
+                any(), any(), any(), any(), any()
         )).thenReturn(mockPage);
 
         ProductRequest request = new ProductRequest();
-
         // when
         Page<ProductResponse> result = productService.getProducts(request);
-
         // then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
