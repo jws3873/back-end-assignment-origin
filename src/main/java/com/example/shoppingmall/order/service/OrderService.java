@@ -22,6 +22,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class OrderService {
 
     private final CartRepository cartRepository;
@@ -39,7 +40,6 @@ public class OrderService {
      * 5. 결제 결과 저장
      * 6. 성공 시 재고 차감 및 장바구니 비움
      */
-    @Transactional
     public OrderResponse createOrder(OrderRequest request) {
 
         // 사용자 확인
