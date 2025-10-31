@@ -3,6 +3,7 @@ package com.example.shoppingmall.payment.controller;
 import com.example.shoppingmall.payment.dto.PaymentResponse;
 import com.example.shoppingmall.payment.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "결재 API", description = "결재 관련 API")
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
