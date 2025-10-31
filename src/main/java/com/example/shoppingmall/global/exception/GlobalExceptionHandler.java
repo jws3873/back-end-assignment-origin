@@ -1,18 +1,20 @@
 package com.example.shoppingmall.global.exception;
 
+
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.time.LocalDateTime;
 
 /**
  * 전역 예외 처리 핸들러 (AOP 기반)
  * Controller / Service에서 발생한 예외를 잡아 공통 포맷으로 응답
  */
+@Slf4j
 @RestControllerAdvice
 @Hidden // <- Swagger(OpenAPI) 문서 생성 시 완전히 무시
 public class GlobalExceptionHandler {
@@ -25,6 +27,7 @@ public class GlobalExceptionHandler {
             BusinessException ex,
             HttpServletRequest request
     ) {
+        log.warn("[BusinessException] {} -> {}", request.getRequestURI(), ex.getMessage());
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(ex.getStatus())
@@ -44,6 +47,7 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+        log.error("[Exception] {} -> {}", request.getRequestURI(), ex.getMessage(), ex);
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
