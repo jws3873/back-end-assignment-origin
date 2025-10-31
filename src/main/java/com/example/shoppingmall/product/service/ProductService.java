@@ -24,12 +24,15 @@ public class ProductService {
      */
     public Page<ProductResponse> getProducts(ProductRequest request) {
 
-        Page<Product> products = productRepository.findByCategoryContainingAndNameContainingAndPriceBetween(
+        int page = Math.max(request.getPage(), 0);
+        int size = Math.max(request.getSize(), 1);
+
+        Page<Product> products = productRepository.searchProducts(
                 request.getCategory(),
                 request.getName(),
                 request.getMinPrice(),
                 request.getMaxPrice(),
-                PageRequest.of(request.getPage(), request.getSize())
+                PageRequest.of(page, size)
         );
         return products.map(ProductResponse::fromEntity);
     }
