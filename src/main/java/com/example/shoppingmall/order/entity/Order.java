@@ -27,6 +27,7 @@ public class Order {
     private int totalAmount; // 총 결제 금액
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 30, nullable = false)
     private OrderStatus status; // 주문 상태 (Enum)
 
     private String transactionId; // 외부 결제 트랜잭션 ID

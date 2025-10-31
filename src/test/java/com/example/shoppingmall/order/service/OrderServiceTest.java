@@ -5,11 +5,8 @@ import com.example.shoppingmall.cart.repository.CartRepository;
 import com.example.shoppingmall.global.exception.BusinessException;
 import com.example.shoppingmall.order.dto.OrderRequest;
 import com.example.shoppingmall.order.dto.OrderResponse;
-import com.example.shoppingmall.order.entity.Order;
 import com.example.shoppingmall.order.entity.OrderStatus;
 import com.example.shoppingmall.order.repository.OrderRepository;
-import com.example.shoppingmall.payment.entity.Payment;
-import com.example.shoppingmall.payment.service.PaymentService;
 import com.example.shoppingmall.product.entity.Product;
 import com.example.shoppingmall.user.entity.User;
 import com.example.shoppingmall.user.repository.UserRepository;
@@ -24,22 +21,21 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class OrderServiceTest {
+class OrderServiceTest {
 
     @Mock private CartRepository cartRepository;
     @Mock private OrderRepository orderRepository;
     @Mock private UserRepository userRepository;
-    @Mock private PaymentService paymentService;
 
     @InjectMocks
     private OrderService orderService;
 
     @Test
-    @DisplayName("주문 생성 및 결제 성공 테스트")
+    @DisplayName("주문 생성 성공 - 결제 대기 상태로 생성")
     void createOrder_success() {
         // given
         User user = User.builder().id(1L).build();
@@ -57,32 +53,25 @@ public class OrderServiceTest {
                 .quantity(2)
                 .build();
 
-        Payment mockPayment = Payment.builder()
-                .transactionId("TX-123")
-                .status("SUCCESS")
-                .message("결제가 완료되었습니다.")
-                .build();
-
         OrderRequest request = new OrderRequest();
         request.setUserId(1L);
         request.setCartIds(List.of(1L));
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(cartRepository.findAllById(request.getCartIds())).thenReturn(List.of(cart));
-        when(paymentService.processPayment(any(Order.class))).thenReturn(mockPayment);
 
         // when
         OrderResponse response = orderService.createOrder(request);
 
         // then
-        assertThat(response.getStatus()).isEqualTo(OrderStatus.PAYMENT_COMPLETED.name());
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.PENDING_PAYMENT.name());
         assertThat(response.getMessage()).contains("결제");
-        verify(orderRepository, times(2)).save(any(Order.class)); // CREATED + COMPLETED 상태 2회
+        verify(orderRepository, times(1)).save(any());
         verify(cartRepository, times(1)).deleteAll(any());
     }
 
     @Test
-    @DisplayName("재고 부족 시 주문 실패 테스트")
+    @DisplayName("재고 부족 시 주문 실패")
     void createOrder_insufficientStock() {
         // given
         User user = User.builder().id(1L).build();
@@ -105,7 +94,7 @@ public class OrderServiceTest {
         request.setCartIds(List.of(1L));
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(cartRepository.findAllById(request.getCartIds())).thenReturn(List.of(cart));
+        when(cartRepository.findAllById(any())).thenReturn(List.of(cart));
 
         // when & then
         assertThatThrownBy(() -> orderService.createOrder(request))
@@ -131,5 +120,4 @@ public class OrderServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("장바구니가 비어 있습니다.");
     }
-
 }
