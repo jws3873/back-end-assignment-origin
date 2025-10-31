@@ -30,8 +30,6 @@ public class Order {
     @Column(length = 30, nullable = false)
     private OrderStatus status; // 주문 상태 (Enum)
 
-    private String transactionId; // 외부 결제 트랜잭션 ID
-
     /**
      * 주문 상품 목록 (OrderItem과 1:N 관계)
      * 주문이 삭제되면 관련 주문상품도 함께 삭제됨
