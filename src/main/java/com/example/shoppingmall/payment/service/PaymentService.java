@@ -69,4 +69,17 @@ public class PaymentService {
                 .map(PaymentResponse::fromEntity)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 특정 사용자의 전체 결제 이력 조회
+     *
+     * @param userId 사용자 번호
+     * @return 결제 이력 리스트
+     */
+    @Transactional(readOnly = true)
+    public List<PaymentResponse> getPaymentsByUser(Long userId) {
+        return paymentRepository.findByOrder_User_Id(userId).stream()
+                .map(PaymentResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
 }
