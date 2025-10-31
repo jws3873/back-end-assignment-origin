@@ -1,10 +1,17 @@
 package com.example.shoppingmall.payment.service;
 
+import com.example.shoppingmall.global.exception.BusinessException;
 import com.example.shoppingmall.order.entity.Order;
+import com.example.shoppingmall.order.entity.OrderStatus;
+import com.example.shoppingmall.order.repository.OrderRepository;
+import com.example.shoppingmall.payment.dto.PaymentRequest;
 import com.example.shoppingmall.payment.dto.PaymentResponse;
 import com.example.shoppingmall.payment.entity.Payment;
 import com.example.shoppingmall.payment.repository.PaymentRepository;
+import com.example.shoppingmall.user.entity.User;
+import com.example.shoppingmall.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,34 +25,63 @@ import java.util.stream.Collectors;
 /**
  * 결제 이력 조회 서비스
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final RestTemplate restTemplate; // 외부 주입
+    private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
+    private final RestTemplate restTemplate;
 
     private static final String PAYMENT_API_URL = "https://mock-payment-api.free.beeceptor.com/api/v1/payment";
 
     /**
-     * 외부 결제 요청 및 결과 저장
-     *
-     * @param order
-     * @return 결제 결과
+     * 외부 결제 API 호출 + 결제 결과 저장
      */
-    public Payment processPayment(Order order) {
+    public PaymentResponse processPayment(PaymentRequest request) {
+
+        // 1. 사용자 및 주문 검증
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new BusinessException("사용자를 찾을 수 없습니다.", 404));
+
+        Order order = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new BusinessException("주문을 찾을 수 없습니다.", 404));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new BusinessException("본인 주문만 결제할 수 있습니다.", 403);
+        }
+
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BusinessException("결제할 수 없는 주문 상태입니다.", 400);
+        }
+
+        // 2.주문 아이템별 재고 검증
+        order.getOrderItems().forEach(item -> {
+            var product = item.getProduct();
+            if (product.isSoldOut() || product.getStock() < item.getQuantity()) {
+                throw new BusinessException("상품 재고가 부족합니다: " + product.getName(), 409);
+            }
+        });
+
+        // 3. 외부 결제 API 요청
         Map<String, Object> requestBody = Map.of(
                 "orderId", order.getId().toString(),
                 "amount", order.getTotalAmount()
         );
 
+        log.info("[결제 요청] 외부 API 호출: {}", PAYMENT_API_URL);
         ResponseEntity<Map> response =
                 restTemplate.postForEntity(PAYMENT_API_URL, requestBody, Map.class);
 
         Map<String, Object> body = response.getBody();
+        if (body == null) {
+            throw new BusinessException("결제 응답이 올바르지 않습니다.", 500);
+        }
 
-        // 결제 결과 저장
+        // 4. 결제 결과 저장
         Payment payment = Payment.builder()
                 .order(order)
                 .transactionId((String) body.get("transactionId"))
@@ -55,7 +91,29 @@ public class PaymentService {
                 .build();
 
         paymentRepository.save(payment);
-        return payment;
+
+        // 4. 주문 상태 변경 (성공/실패 반영)
+        String status = (String) body.get("status");
+        if ("SUCCESS".equalsIgnoreCase(status)) {
+            order.getOrderItems().forEach(item -> {
+                var product = item.getProduct();
+                int remain = product.getStock() - item.getQuantity();
+                if (remain < 0) {
+                    throw new BusinessException("결제 중 재고가 부족합니다: " + product.getName(), 409);
+                }
+                product.setStock(remain);
+            });
+            order.setStatus(OrderStatus.PAYMENT_COMPLETED);
+        } else {
+            order.setStatus(OrderStatus.PAYMENT_FAILED);
+        }
+        orderRepository.save(order);
+
+        log.info("[결제 결과] orderId={}, status={}, transactionId={}",
+                order.getId(), status, body.get("transactionId"));
+
+        // 5. DTO 반환
+        return PaymentResponse.fromEntity(payment);
     }
 
     /**
