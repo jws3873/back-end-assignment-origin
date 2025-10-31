@@ -9,8 +9,6 @@ import com.example.shoppingmall.order.entity.Order;
 import com.example.shoppingmall.order.entity.OrderItem;
 import com.example.shoppingmall.order.entity.OrderStatus;
 import com.example.shoppingmall.order.repository.OrderRepository;
-import com.example.shoppingmall.payment.entity.Payment;
-import com.example.shoppingmall.payment.service.PaymentService;
 import com.example.shoppingmall.product.entity.Product;
 import com.example.shoppingmall.user.entity.User;
 import com.example.shoppingmall.user.repository.UserRepository;
@@ -28,88 +26,82 @@ public class OrderService {
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
-    private final PaymentService paymentService;
 
     /**
-     * 주문 생성 및 결제 처리
-     *
-     * 1. 장바구니 상품 조회
-     * 2. 총 금액 계산 및 재고 확인
-     * 3. 주문 생성
-     * 4. 외부 결제 요청
-     * 5. 결제 결과 저장
-     * 6. 성공 시 재고 차감 및 장바구니 비움
+     * 주문 생성 (결제는 별도 단계)
+     * 1. 사용자 확인
+     * 2. 장바구니 상품 조회 및 검증
+     * 3. 재고 확인 및 총 금액 계산
+     * 4. 주문 생성 (PENDING_PAYMENT)
+     * 5. 장바구니 비우기
      */
     public OrderResponse createOrder(OrderRequest request) {
 
-        // 사용자 확인
+        // 1. 사용자 조회
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new BusinessException("사용자를 찾을 수 없습니다.", 404));
 
-        // 장바구니 항목 조회
+        // 2. 장바구니 상품 조회
         List<Cart> cartItems = cartRepository.findAllById(request.getCartIds());
-        if( cartItems.isEmpty() ) {
+        if (cartItems.isEmpty()) {
             throw new BusinessException("장바구니가 비어 있습니다.", 400);
         }
 
-        // 총 금액 계산 및 재고 확인
+        // 3. 재고 확인 및 총 금액 계산
         int totalAmount = 0;
         for (Cart item : cartItems) {
             Product product = item.getProduct();
-            // 재고 부족 또는 품절 상태 확인
-            if( product.isSoldOut() || product.getStock() < item.getQuantity()) {
+            if (product.isSoldOut() || product.getStock() < item.getQuantity()) {
                 throw new BusinessException("상품 재고가 부족합니다: " + product.getName(), 409);
             }
             totalAmount += product.getPrice() * item.getQuantity();
         }
 
-        // 주문 엔터티 생성 (CREATED 상태)
+        // 4. 주문 생성 (결제 대기 상태)
         Order order = Order.builder()
                 .user(user)
                 .totalAmount(totalAmount)
-                .status(OrderStatus.CREATED)
+                .status(OrderStatus.PENDING_PAYMENT)
                 .build();
 
-        // 장바구니 → 주문상품(OrderItem)으로 변환
+        // 장바구니 → 주문상품으로 변환
         for (Cart item : cartItems) {
-            Product product = item.getProduct();
-
             OrderItem orderItem = OrderItem.builder()
-                    .product(product)
+                    .product(item.getProduct())
                     .quantity(item.getQuantity())
-                    .price(product.getPrice())
+                    .price(item.getProduct().getPrice())
                     .build();
-
             order.addOrderItem(orderItem);
         }
 
         orderRepository.save(order);
 
-        // 결제 요청 전 상태 변경 (PAYMENT_PENDING)
-        order.setStatus(OrderStatus.PAYMENT_PENDING);
+        // 5. 장바구니 비우기
+        cartRepository.deleteAll(cartItems);
 
-        // 결제 처리
-        Payment payment = paymentService.processPayment(order);
-
-        // 결제 결과 반영
-        if("SUCCESS".equals(payment.getStatus())) {
-            for (Cart item : cartItems) {
-                Product product = item.getProduct();
-                product.setStock(product.getStock() - item.getQuantity());
-            }
-            order.setStatus(OrderStatus.PAYMENT_COMPLETED);
-            orderRepository.save(order);
-            cartRepository.deleteAll(cartItems); // 장바구니 비우기
-        } else {
-            order.setStatus(OrderStatus.PAYMENT_FAILED);
-        }
-
+        // 6. 응답 반환
         return OrderResponse.builder()
                 .orderId(order.getId())
                 .status(order.getStatus().name())
                 .totalAmount(order.getTotalAmount())
-                .transactionId(payment.getTransactionId())
-                .message(payment.getMessage())
+                .message("주문이 생성되었습니다. 결제를 진행하세요.")
                 .build();
+    }
+
+    /**
+     * 주문 취소
+     * 결제 완료된 주문만 취소 가능
+     */
+    public void cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException("주문을 찾을 수 없습니다.", 404));
+
+        if (order.getStatus() != OrderStatus.PAYMENT_COMPLETED) {
+            throw new BusinessException("결제 완료된 주문만 취소할 수 있습니다.", 400);
+        }
+
+        // 상태 변경
+        order.setStatus(OrderStatus.CANCELED);
+        orderRepository.save(order);
     }
 }
