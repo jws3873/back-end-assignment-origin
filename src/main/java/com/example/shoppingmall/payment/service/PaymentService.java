@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
@@ -33,7 +34,6 @@ public class PaymentService {
      * @param order
      * @return 결제 결과
      */
-    @Transactional
     public Payment processPayment(Order order) {
         Map<String, Object> requestBody = Map.of(
                 "orderId", order.getId().toString(),
