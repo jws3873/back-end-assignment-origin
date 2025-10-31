@@ -8,9 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -22,6 +24,7 @@ public class ProductService {
      * @param request 상품 조회용 DTO
      * @return 상품 목록 페이지
      */
+    @Transactional(readOnly = true)
     public Page<ProductResponse> getProducts(ProductRequest request) {
 
         int page = Math.max(request.getPage(), 0);
