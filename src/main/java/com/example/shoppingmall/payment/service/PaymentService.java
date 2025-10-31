@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final RestTemplate restTemplate; // 외부 주입
 
     private static final String PAYMENT_API_URL = "https://mock-payment-api.free.beeceptor.com/api/v1/payment";
 
@@ -39,9 +40,11 @@ public class PaymentService {
                 "amount", order.getTotalAmount()
         );
 
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Map> response = restTemplate.postForEntity(PAYMENT_API_URL, requestBody, Map.class);
+        ResponseEntity<Map> response =
+                restTemplate.postForEntity(PAYMENT_API_URL, requestBody, Map.class);
+
         Map<String, Object> body = response.getBody();
+
         // 결제 결과 저장
         Payment payment = Payment.builder()
                 .order(order)
