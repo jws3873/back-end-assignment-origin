@@ -54,7 +54,9 @@ public class PaymentService {
             throw new BusinessException("본인 주문만 결제할 수 있습니다.", 403);
         }
 
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+        // 결제 가능한 상태: 결제 대기(PENDING_PAYMENT), 결제 실패(PAYMENT_FAILED)
+        if (!(order.getStatus() == OrderStatus.PENDING_PAYMENT ||
+                order.getStatus() == OrderStatus.PAYMENT_FAILED)) {
             throw new BusinessException("결제할 수 없는 주문 상태입니다.", 400);
         }
 

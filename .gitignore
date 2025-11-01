@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/.DS_Store
+
+# === Spring Boot Configuration ===
+/src/main/resources/application.yml

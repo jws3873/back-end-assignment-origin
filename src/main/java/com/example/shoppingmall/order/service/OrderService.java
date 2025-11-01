@@ -28,6 +28,37 @@ public class OrderService {
     private final UserRepository userRepository;
 
     /**
+     * 주문정보 조회
+     * 특정 사용자의 주문정보 반환
+     *
+     * @param userId 조회할 사용자 번호
+     * @return 주문정보 목록
+     */
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getOrdersByUser(Long userId) {
+        // 사용자 존재 여부 검증
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("사용자를 찾을 수 없습니다.", 404));
+
+        // 사용자 주문 목록 조회
+        List<Order> orders = orderRepository.findByUser(user);
+
+        if (orders.isEmpty()) {
+            throw new BusinessException("해당 사용자의 주문 내역이 없습니다.", 404);
+        }
+
+        // 주문 → OrderResponse 변환
+        return orders.stream()
+                .map(order -> OrderResponse.builder()
+                        .orderId(order.getId())
+                        .status(order.getStatus().name())
+                        .totalAmount(order.getTotalAmount())
+                        .message("주문 조회 성공")
+                        .build())
+                .toList();
+    }
+
+    /**
      * 주문 생성 (결제는 별도 단계)
      * 1. 사용자 확인
      * 2. 장바구니 상품 조회 및 검증
