@@ -1,7 +1,7 @@
 ## 🛍️ ShoppingMall API
 
 > Spring Boot 기반의 쇼핑몰 백엔드 시스템
-> **주문 → 결제 → 재고 관리 → 장바구니**의 전체 트랜잭션 플로우를 구현한 프로젝트입니다.
+> **상품검색 → 장바구니 → 주문 → 결제**의 전체 플로우를 구현한 프로젝트입니다.
 > 통합 테스트 및 Swagger 문서화를 통해 안정성과 확장성을 확보했습니다.
 
 ---
@@ -235,7 +235,7 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 
 ---
 
-## 🧭 트랜잭션 및 프로세스 흐름 요약 (수정)
+## 🧭 트랜잭션 및 프로세스 흐름 요약
 
 1. **상품 조회 (`GET /api/v1/products`)**
     * 검색 조건(category, name, price range)으로 상품 목록 조회
